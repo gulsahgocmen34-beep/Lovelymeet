@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Kavuşma</title>
+
+<style>
+html,body{
+  margin:0;padding:0;overflow:hidden;
+  background:#000;font-family:monospace;
+}
+
+/* START */
+#startScreen{
+  position:fixed;inset:0;
+  background:url("start.jpg") center/cover no-repeat;
+  z-index:10000;cursor:pointer;
+}
+
+/* GAME */
+#game{
+  position:relative;width:100vw;height:100vh;
+  background:url("Ocean_background_6.png") center bottom/cover no-repeat;
+  display:none;
+}
+
+/* GROUND */
+#ground{
+  position:absolute;bottom:0;width:100%;
+  height:140px;background:url("grass.png") repeat-x;
+}
+
+/* CHARACTERS */
+.character{
+  position:absolute;bottom:140px;width:96px;
+  image-rendering:pixelated;
+  animation:bounce .6s infinite alternate;
+}
+@keyframes bounce{
+  from{transform:translateY(0)}
+  to{transform:translateY(-4px)}
+}
+#girl{left:40px}
+#boy{right:40px;transform:scaleX(-1)}
+
+/* SPEECH */
+#speech{
+  position:absolute;width:280px;
+  image-rendering:pixelated;
+  opacity:0;
+  transform:translate(-50%,10px) scale(.9);
+  transition:all .6s ease;
+  z-index:20;
+}
+#speech.show{
+  opacity:1;
+  transform:translate(-50%,0) scale(1);
+}
+
+/* YOU WIN */
+#youWin{
+  position:fixed;top:40px;left:50%;
+  transform:translateX(-50%) scale(.85);
+  width:440px;opacity:0;
+  filter:blur(8px);
+  image-rendering:pixelated;
+  transition:all 1.4s ease;
+  z-index:900;
+}
+#youWin.show{
+  opacity:1;filter:blur(0)
+  drop-shadow(0 0 12px #ffd86b)
+  drop-shadow(0 0 28px #ff9f1c)
+  drop-shadow(0 0 48px #ff5e00);
+  transform:translateX(-50%) scale(1);
+}
+
+/* CENTER HEARTS */
+.center-heart{
+  position:absolute;font-size:24px;color:#ff2d55;
+  animation:centerFloat 2.4s ease-out forwards;
+  pointer-events:none;z-index:15;
+}
+@keyframes centerFloat{
+  from{opacity:1;transform:translate(-50%,0)}
+  to{opacity:0;transform:translate(-50%,-160px) scale(1.8)}
+}
+
+/* BOTTOM HEARTS */
+.bottom-heart{
+  position:fixed;bottom:-40px;
+  font-size:20px;color:#ff5e8a;
+  animation:flyUp linear forwards;
+  pointer-events:none;z-index:10;
+}
+@keyframes flyUp{
+  from{transform:translateY(0) scale(.8);opacity:0}
+  15%{opacity:1}
+  to{transform:translateY(-120vh) scale(1.6);opacity:0}
+}
+
+/* BIG HEART */
+#bigHeart{
+  position:fixed;left:50%;top:50%;
+  font-size:220px;
+  transform:translate(-50%,-50%) scale(0);
+  opacity:0;z-index:950;
+}
+@keyframes heartPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0}
+  30%{transform:translate(-50%,-50%) scale(2);opacity:1}
+  55%{transform:translate(-50%,-50%) scale(3);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(0);opacity:0}
+}
+
+/* POP HEARTS */
+.pop-heart{
+  position:fixed;left:50%;top:50%;
+  font-size:26px;
+  animation:flyOut 2.6s ease-out forwards;
+  pointer-events:none;z-index:960;
+}
+@keyframes flyOut{
+  to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}
+}
+
+/* REPLAY */
+#replayBtn{
+  position:fixed;bottom:30px;right:30px;
+  padding:12px 18px;background:#111;color:#fff;
+  border:2px solid #fff;cursor:pointer;
+  display:none;z-index:1000;
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen"></div>
+
+<div id="game">
+  <img id="girl" class="character" src="girl.png">
+  <img id="boy" class="character" src="boy.png">
+  <img id="speech" src="speech.png">
+  <div id="ground"></div>
+</div>
+
+<img id="youWin" src="youwin.png">
+<div id="bigHeart">❤️</div>
+<button id="replayBtn">Replay</button>
+
+<script>
+const startScreen=document.getElementById("startScreen");
+const game=document.getElementById("game");
+const girl=document.getElementById("girl");
+const boy=document.getElementById("boy");
+const speech=document.getElementById("speech");
+const youWin=document.getElementById("youWin");
+const bigHeart=document.getElementById("bigHeart");
+const replayBtn=document.getElementById("replayBtn");
+
+const totalSteps=9,stepSize=60,stepDelay=400;
+let step=0;
+
+/* START */
+startScreen.onclick=()=>{
+  startScreen.style.display="none";
+  game.style.display="block";
+  walk();
+};
+
+function walk(){
+  const w=setInterval(()=>{
+    step++;
+    girl.style.left=40+step*stepSize+"px";
+    boy.style.right=40+step*stepSize+"px";
+    if(step>=totalSteps){
+      clearInterval(w);
+      setTimeout(finalScene,600);
+    }
+  },stepDelay);
+}
+
+function finalScene(){
+  girl.style.animation="none";
+  boy.style.animation="none";
+
+  const cx=innerWidth/2,gy=140;
+  girl.style.left=cx-90+"px";
+  boy.style.left=cx-10+"px";
+  boy.style.right="auto";
+  boy.style.transform="scaleX(1)";
+
+  speech.style.left=cx+"px";
+  speech.style.bottom=gy+130+"px";
+  speech.classList.add("show");
+
+  youWin.classList.add("show");
+
+  startCenterHearts(cx,gy+80);
+  startBottomHearts();
+
+  bigHeart.style.animation="heartPop 1.6s ease-out forwards";
+  setTimeout(popHearts,700);
+
+  replayBtn.style.display="block";
+}
+
+function startCenterHearts(x,y){
+  setInterval(()=>{
+    const h=document.createElement("div");
+    h.className="center-heart";h.textContent="❤";
+    h.style.left=x+(Math.random()*60-30)+"px";
+    h.style.bottom=y+"px";
+    game.appendChild(h);
+    setTimeout(()=>h.remove(),2400);
+  },300);
+}
+
+function startBottomHearts(){
+  setInterval(()=>{
+    const h=document.createElement("div");
+    h.className="bottom-heart";h.textContent="❤";
+    h.style.left=Math.random()*100+"vw";
+    h.style.fontSize=16+Math.random()*14+"px";
+    h.style.animationDuration=4+Math.random()*3+"s";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),8000);
+  },120);
+}
+
+function popHearts(){
+  for(let i=0;i<40;i++){
+    const h=document.createElement("div");
+    h.className="pop-heart";h.textContent="❤";
+    h.style.setProperty("--x",(Math.random()*800-400)+"px");
+    h.style.setProperty("--y",(Math.random()*800-400)+"px");
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),2600);
+  }
+}
+
+/* REPLAY */
+replayBtn.onclick=()=>{
+  location.reload();
+};
+</script>
+
+</body>
+</html>
